@@ -1,0 +1,11 @@
+feature,feature_value,shap_value,impact_direction,absolute_impact
+categorical__job_role_Sales Representative,1.0,1.057325201979258,increases_attrition_risk,1.057325201979258
+categorical__business_travel_Non-Travel,1.0,-0.9198414446403939,decreases_attrition_risk,0.9198414446403939
+numeric__total_working_years,-1.3291482629651574,0.8195479709889585,increases_attrition_risk,0.8195479709889585
+numeric__job_level,-0.9862649071659377,-0.6260094384925837,decreases_attrition_risk,0.6260094384925837
+numeric__years_with_curr_manager,-1.177687211234465,0.537858566094894,increases_attrition_risk,0.537858566094894
+numeric__environment_satisfaction,1.1791138942345,-0.48347515813405356,decreases_attrition_risk,0.48347515813405356
+numeric__years_since_promotion,-0.679165010153175,-0.4382454150190917,decreases_attrition_risk,0.4382454150190917
+numeric__age,-1.4168258667766453,0.3632686820121441,increases_attrition_risk,0.3632686820121441
+numeric__years_in_current_role,-1.1859053352917943,0.32635555629511,increases_attrition_risk,0.32635555629511
+numeric__num_companies_worked,-0.6812931308626707,-0.32327364720943635,decreases_attrition_risk,0.32327364720943635
