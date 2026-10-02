@@ -115,21 +115,44 @@ def clean_hr_data(df: pd.DataFrame) -> pd.DataFrame:
     clean_df["is_below_department_income_avg"] = (
         clean_df["income_vs_department_avg"] < 1
     ).astype(int)
-
+    
     clean_df = clean_df.rename(
         columns={
-            "EmployeeNumber": "source_employee_number",
-            "MonthlyIncome": "monthly_income",
-            "YearsAtCompany": "years_at_company",
-            "JobSatisfaction": "job_satisfaction",
-            "WorkLifeBalance": "work_life_balance",
-            "PerformanceRating": "performance_rating",
-            "Department": "department",
-            "JobRole": "job_role",
-            "Gender": "gender",
             "Age": "age",
-            "OverTime": "overtime",
             "Attrition": "attrition",
+            "BusinessTravel": "business_travel",
+            "DailyRate": "daily_rate",
+            "Department": "department",
+            "DistanceFromHome": "distance_from_home",
+            "Education": "education",
+            "EducationField": "education_field",
+            "EmployeeCount": "employee_count",
+            "EmployeeNumber": "source_employee_number",
+            "EnvironmentSatisfaction": "environment_satisfaction",
+            "Gender": "gender",
+            "HourlyRate": "hourly_rate",
+            "JobInvolvement": "job_involvement",
+            "JobLevel": "job_level",
+            "JobRole": "job_role",
+            "JobSatisfaction": "job_satisfaction",
+            "MaritalStatus": "marital_status",
+            "MonthlyIncome": "monthly_income",
+            "MonthlyRate": "monthly_rate",
+            "NumCompaniesWorked": "num_companies_worked",
+            "Over18": "over_18",
+            "OverTime": "overtime",
+            "PercentSalaryHike": "percent_salary_hike",
+            "PerformanceRating": "performance_rating",
+            "RelationshipSatisfaction": "relationship_satisfaction",
+            "StandardHours": "standard_hours",
+            "StockOptionLevel": "stock_option_level",
+            "TotalWorkingYears": "total_working_years",
+            "TrainingTimesLastYear": "training_times_last_year",
+            "WorkLifeBalance": "work_life_balance",
+            "YearsAtCompany": "years_at_company",
+            "YearsInCurrentRole": "years_in_current_role",
+            "YearsSinceLastPromotion": "years_since_last_promotion_source",
+            "YearsWithCurrManager": "years_with_curr_manager",
         }
     )
 

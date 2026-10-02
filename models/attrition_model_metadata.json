@@ -1,0 +1,84 @@
+{
+  "model_name": "Logistic Regression",
+  "target": "attrition_flag",
+  "features": [
+    "age",
+    "business_travel",
+    "department",
+    "distance_from_home",
+    "education",
+    "education_field",
+    "environment_satisfaction",
+    "gender",
+    "job_involvement",
+    "job_level",
+    "job_role",
+    "job_satisfaction",
+    "marital_status",
+    "monthly_income",
+    "num_companies_worked",
+    "overtime",
+    "percent_salary_hike",
+    "performance_rating",
+    "relationship_satisfaction",
+    "stock_option_level",
+    "total_working_years",
+    "training_times_last_year",
+    "work_life_balance",
+    "years_at_company",
+    "years_in_current_role",
+    "years_since_promotion",
+    "years_with_curr_manager"
+  ],
+  "numeric_features": [
+    "age",
+    "distance_from_home",
+    "education",
+    "environment_satisfaction",
+    "job_involvement",
+    "job_level",
+    "job_satisfaction",
+    "monthly_income",
+    "num_companies_worked",
+    "percent_salary_hike",
+    "performance_rating",
+    "relationship_satisfaction",
+    "stock_option_level",
+    "total_working_years",
+    "training_times_last_year",
+    "work_life_balance",
+    "years_at_company",
+    "years_in_current_role",
+    "years_since_promotion",
+    "years_with_curr_manager"
+  ],
+  "categorical_features": [
+    "business_travel",
+    "department",
+    "education_field",
+    "gender",
+    "job_role",
+    "marital_status",
+    "overtime"
+  ],
+  "metrics": {
+    "accuracy": 0.7687,
+    "precision": 0.3765,
+    "recall": 0.6809,
+    "f1_score": 0.4848,
+    "roc_auc": 0.8144,
+    "confusion_matrix": [
+      [
+        194,
+        53
+      ],
+      [
+        15,
+        32
+      ]
+    ],
+    "threshold": 0.5
+  },
+  "training_timestamp_utc": "2026-10-02T21:26:37.706011+00:00",
+  "dataset_note": "Trained on IBM HR Analytics portfolio data. Not for real employment decisions."
+}
