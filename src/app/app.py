@@ -146,11 +146,12 @@ if selected_job_role != "All job roles":
 st.title("Workforce360")
 st.caption("Understand workforce health, attrition risk, and what drives it.")
 
-overview_tab, risk_tab, people_tab, model_tab = st.tabs(
+overview_tab, risk_tab, people_tab, simulator_tab, model_tab = st.tabs(
     [
         "Workforce overview",
         "Attrition risk",
         "People to review",
+        "What-if simulator",
         "Model quality",
     ]
 )
@@ -500,5 +501,107 @@ with model_tab:
             - Do not use this tool to punish, discipline, or make final decisions about individuals.
             - SHAP values explain the model’s reasoning, not proven causes of attrition.
             - Review model performance, data quality, and fairness regularly before operational use.
+            """
+        )
+
+with simulator_tab:
+    st.subheader("Explore a hypothetical employee")
+
+    st.caption(
+        "Adjust key profile settings to see how the model estimates attrition risk. "
+        "This is a scenario-analysis tool, not a guarantee of future outcomes."
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    monthly_income = col1.slider(
+        "Monthly income",
+        min_value=1000,
+        max_value=20000,
+        value=5000,
+        step=100,
+    )
+
+    overtime_choice = col2.selectbox(
+        "Works overtime?",
+        options=["No", "Yes"],
+    )
+
+    job_satisfaction = col3.slider(
+        "Job satisfaction",
+        min_value=1,
+        max_value=4,
+        value=3,
+    )
+
+    col4, col5, col6 = st.columns(3)
+
+    years_at_company = col4.slider(
+        "Years at company",
+        min_value=0,
+        max_value=40,
+        value=5,
+    )
+
+    years_since_promotion = col5.slider(
+        "Years since promotion",
+        min_value=0,
+        max_value=15,
+        value=3,
+    )
+
+    age = col6.slider(
+        "Age",
+        min_value=18,
+        max_value=60,
+        value=35,
+    )
+
+    sample_employee = df.iloc[[0]].copy()
+
+    sample_employee["monthly_income"] = monthly_income
+    sample_employee["overtime_flag"] = 1 if overtime_choice == "Yes" else 0
+    sample_employee["job_satisfaction"] = job_satisfaction
+    sample_employee["years_at_company"] = years_at_company
+    sample_employee["years_since_promotion"] = years_since_promotion
+    sample_employee["age"] = age
+
+    simulator_probability = model.predict_proba(sample_employee)[0, 1]
+    simulator_tier = get_risk_tier(simulator_probability)
+
+    st.divider()
+
+    result_col, explanation_col = st.columns([1, 2])
+
+    with result_col:
+        st.metric(
+            "Estimated attrition probability",
+            f"{simulator_probability:.0%}",
+        )
+
+        if simulator_tier == "High":
+            st.error(f"**{simulator_tier} risk**")
+        elif simulator_tier == "Medium":
+            st.warning(f"**{simulator_tier} risk**")
+        else:
+            st.success(f"**{simulator_tier} risk**")
+
+        st.progress(
+            min(simulator_probability, 1.0),
+            text=f"Model score: {simulator_probability:.1%}",
+        )
+
+    with explanation_col:
+        st.info(
+            "The simulator changes only the selected fields while keeping other "
+            "employee attributes from the baseline profile unchanged."
+        )
+
+    with st.expander("How to use this responsibly"):
+        st.markdown(
+            """
+            - Use the simulator to explore possible workforce scenarios, not to make decisions about a real individual.
+            - Changing one input does not prove that changing it in real life would change attrition.
+            - The model reflects historical patterns in the training data and may not generalize to every workforce.
             """
         )
