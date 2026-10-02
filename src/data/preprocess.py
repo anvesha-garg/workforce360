@@ -81,8 +81,8 @@ def clean_hr_data(df: pd.DataFrame) -> pd.DataFrame:
     clean_df = clean_df.drop_duplicates().reset_index(drop=True)
 
     numeric_columns = clean_df.select_dtypes(include="number").columns
-    categorical_columns = clean_df.select_dtypes(include="object").columns
-
+    categorical_columns = clean_df.select_dtypes(
+    include=["object", "string"]).columns
     for column in numeric_columns:
         clean_df[column] = clean_df[column].fillna(clean_df[column].median())
 
