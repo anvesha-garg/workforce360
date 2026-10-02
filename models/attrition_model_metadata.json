@@ -79,6 +79,6 @@
     ],
     "threshold": 0.5
   },
-  "training_timestamp_utc": "2026-10-02T21:26:37.706011+00:00",
+  "training_timestamp_utc": "2026-10-02T21:31:30.184744+00:00",
   "dataset_note": "Trained on IBM HR Analytics portfolio data. Not for real employment decisions."
 }
