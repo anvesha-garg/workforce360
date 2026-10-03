@@ -241,7 +241,28 @@ def load_salary_metrics():
 
     return {}
 
+@st.cache_data
+def load_forecast_artifacts():
+    """Load saved workforce-forecasting artifacts."""
+    reports_dir = ROOT / "reports" / "forecasting"
 
+    monthly_path = reports_dir / "monthly_workforce_metrics.csv"
+    forecast_path = reports_dir / "forecast_results.csv"
+    metrics_path = reports_dir / "forecast_metrics.csv"
+
+    required_files = [monthly_path, forecast_path, metrics_path]
+    missing_files = [path.name for path in required_files if not path.exists()]
+
+    if missing_files:
+        raise FileNotFoundError(
+            "Missing forecasting artifacts: " + ", ".join(missing_files)
+        )
+
+    monthly = pd.read_csv(monthly_path, parse_dates=["month"])
+    forecasts = pd.read_csv(forecast_path, parse_dates=["month"])
+    metrics = pd.read_csv(metrics_path)
+
+    return monthly, forecasts, metrics
 def get_risk_tier(probability: float) -> str:
     if probability >= 0.70:
         return "High"
@@ -256,7 +277,15 @@ X_train, X_test, y_train, y_test = load_evaluation_data()
 salary_model = load_salary_model()
 salary_metrics = load_salary_metrics()
 
-
+try:
+    monthly_workforce, forecast_results, forecast_metrics = load_forecast_artifacts()
+    forecast_load_error = None
+except FileNotFoundError as error:
+    monthly_workforce = pd.DataFrame()
+    forecast_results = pd.DataFrame()
+    forecast_metrics = pd.DataFrame()
+    forecast_load_error = str(error)
+    
 @st.cache_resource
 def load_segmentation_artifact():
     return load_segmentation_model()
@@ -363,13 +392,14 @@ with feature_col4:
 
 st.write("")
 
-overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, simulator_tab, model_tab = st.tabs(
+overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast_tab, simulator_tab, model_tab = st.tabs(
     [
         "📊 Workforce overview",
         "🎯 Attrition risk",
         "👥 People to review",
         "🧭 Segmentation",
         "💰 Compensation",
+        "🔮 Forecast",
         "🔍 What-if simulator",
         "📈 Model quality",
     ]
@@ -1106,6 +1136,260 @@ with compensation_tab:
         else:
             st.info("Salary model metrics file was not found.")
 
+with forecast_tab:
+    st.subheader("Workforce Forecasting")
+    st.caption(
+        "Plan for future workforce capacity using monthly headcount, hiring, "
+        "exit, and attrition forecasts."
+    )
+
+    if forecast_load_error:
+        st.error(f"Forecast data is unavailable: {forecast_load_error}")
+        st.info(
+            "Generate the artifacts first by running: "
+            "`python src\\modeling\\forecasting.py`"
+        )
+    else:
+        target_labels = {
+            "headcount": "Headcount",
+            "hires": "Hires",
+            "exits": "Exits",
+            "attrition_rate": "Attrition rate",
+        }
+
+        selected_target = st.selectbox(
+            "Forecast measure",
+            options=list(target_labels),
+            format_func=lambda target: target_labels[target],
+            key="forecast_target",
+        )
+
+        historical = monthly_workforce[["month", selected_target]].copy()
+        historical = historical.rename(columns={selected_target: "value"})
+        historical["series_type"] = "Historical"
+
+        selected_forecast = forecast_results[
+            forecast_results["target"] == selected_target
+        ].copy()
+
+        future = selected_forecast[["month", "forecast"]].rename(
+            columns={"forecast": "value"}
+        )
+        future["series_type"] = "Forecast"
+
+        combined_forecast = pd.concat(
+            [historical, future],
+            ignore_index=True,
+        )
+
+        latest_actual = float(historical["value"].iloc[-1])
+        latest_forecast = float(future["value"].iloc[-1])
+        forecast_change = latest_forecast - latest_actual
+
+        model_used = (
+            selected_forecast["model"].iloc[0]
+            .replace("_", " ")
+            .title()
+        )
+
+        selected_metrics = forecast_metrics[
+            forecast_metrics["target"] == selected_target
+        ].copy()
+
+        best_metric = selected_metrics.sort_values("mae").iloc[0]
+
+        metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+
+        if selected_target == "attrition_rate":
+            metric_col1.metric(
+                "Latest actual",
+                f"{latest_actual:.2%}",
+            )
+            metric_col2.metric(
+                "End-of-forecast estimate",
+                f"{latest_forecast:.2%}",
+                delta=f"{forecast_change:.2%}",
+            )
+        else:
+            metric_col1.metric(
+                "Latest actual",
+                f"{latest_actual:,.0f}",
+            )
+            metric_col2.metric(
+                "End-of-forecast estimate",
+                f"{latest_forecast:,.0f}",
+                delta=f"{forecast_change:,.0f}",
+            )
+
+        metric_col3.metric("Selected model", model_used)
+        metric_col4.metric("Validation MAE", f"{best_metric['mae']:,.3f}")
+
+        st.divider()
+
+        forecast_fig = px.line(
+            combined_forecast,
+            x="month",
+            y="value",
+            color="series_type",
+            markers=True,
+            color_discrete_map={
+                "Historical": "#0F766E",
+                "Forecast": "#F59E0B",
+            },
+            labels={
+                "month": "Month",
+                "value": target_labels[selected_target],
+                "series_type": "Series",
+            },
+        )
+
+        forecast_fig.update_layout(
+            title=f"{target_labels[selected_target]}: Historical Trend and Forecast",
+            height=460,
+            margin=dict(l=10, r=10, t=60, b=10),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            legend_title_text="",
+        )
+
+        if selected_target == "attrition_rate":
+            forecast_fig.update_yaxes(tickformat=".1%")
+
+        st.plotly_chart(forecast_fig, use_container_width=True)
+
+        left_col, right_col = st.columns([3, 2])
+
+        with left_col:
+            st.markdown("#### Forecast detail")
+
+            display_forecast = selected_forecast[
+                ["month", "model", "forecast"]
+            ].copy()
+
+            display_forecast["month"] = display_forecast["month"].dt.strftime(
+                "%b %Y"
+            )
+
+            if selected_target == "attrition_rate":
+                display_forecast["forecast"] = display_forecast[
+                    "forecast"
+                ].map(lambda value: f"{value:.2%}")
+            else:
+                display_forecast["forecast"] = display_forecast[
+                    "forecast"
+                ].round(0).astype(int)
+
+            display_forecast = display_forecast.rename(
+                columns={
+                    "month": "Forecast month",
+                    "model": "Model",
+                    "forecast": target_labels[selected_target],
+                }
+            )
+
+            display_forecast["Model"] = display_forecast["Model"].str.replace(
+                "_",
+                " ",
+            ).str.title()
+
+            st.dataframe(
+                display_forecast,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        with right_col:
+            st.markdown("#### Model validation")
+
+            metric_display = selected_metrics[
+                ["model", "mae", "rmse", "mape"]
+            ].copy()
+
+            metric_display["model"] = metric_display["model"].str.replace(
+                "_",
+                " ",
+            ).str.title()
+
+            metric_display = metric_display.rename(
+                columns={
+                    "model": "Model",
+                    "mae": "MAE",
+                    "rmse": "RMSE",
+                    "mape": "MAPE (%)",
+                }
+            )
+
+            metric_display["MAE"] = metric_display["MAE"].round(3)
+            metric_display["RMSE"] = metric_display["RMSE"].round(3)
+            metric_display["MAPE (%)"] = metric_display["MAPE (%)"].round(2)
+
+            st.dataframe(
+                metric_display,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        st.divider()
+
+        st.markdown("#### Workforce planning signal")
+
+        headcount_forecast = forecast_results[
+            forecast_results["target"] == "headcount"
+        ].copy()
+
+        if not headcount_forecast.empty:
+            current_headcount = float(
+                monthly_workforce["headcount"].iloc[-1]
+            )
+            final_headcount = float(headcount_forecast["forecast"].iloc[-1])
+            expected_change = final_headcount - current_headcount
+
+            planning_col1, planning_col2 = st.columns([1, 2])
+
+            with planning_col1:
+                planning_col1.metric(
+                    "Projected net headcount change",
+                    f"{expected_change:,.0f}",
+                )
+
+            with planning_col2:
+                if expected_change < 0:
+                    st.warning(
+                        f"The baseline outlook indicates a projected workforce "
+                        f"decline of approximately {abs(expected_change):,.0f} "
+                        "employees over the forecast horizon. Review hiring plans, "
+                        "internal mobility, and retention actions."
+                    )
+                elif expected_change > 0:
+                    st.success(
+                        f"The baseline outlook indicates a projected workforce "
+                        f"increase of approximately {expected_change:,.0f} "
+                        "employees over the forecast horizon."
+                    )
+                else:
+                    st.info(
+                        "The forecast indicates broadly stable headcount over "
+                        "the forecast horizon."
+                    )
+
+        forecast_download = forecast_results.copy()
+        forecast_download["month"] = forecast_download["month"].dt.strftime(
+            "%Y-%m-%d"
+        )
+
+        st.download_button(
+            label="Download forecast data",
+            data=forecast_download.to_csv(index=False).encode("utf-8"),
+            file_name="workforce360_forecast_results.csv",
+            mime="text/csv",
+        )
+
+        st.caption(
+            "Important: the source IBM HR dataset is a point-in-time snapshot "
+            "without real hiring or termination dates. This monthly history and "
+            "forecast are deterministic synthetic planning demonstrations, not "
+            "operational workforce predictions."
+        )
 
 with simulator_tab:
     st.subheader("Explore a hypothetical employee")
