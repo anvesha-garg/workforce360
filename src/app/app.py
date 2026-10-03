@@ -30,6 +30,12 @@ from src.modeling.attrition import (
     split_attrition_data,
 )
 
+from src.modeling.segmentation import (
+    assign_cluster,
+    load_segmentation_model,
+    prepare_segmentation_features,
+)
+
 st.set_page_config(
     page_title="Workforce360",
     page_icon=":bar_chart:",
@@ -122,6 +128,17 @@ df = load_clean_data()
 model = load_model()
 X_train, X_test, y_train, y_test = load_evaluation_data()
 
+
+@st.cache_resource
+def load_segmentation_artifact():
+    return load_segmentation_model()
+
+
+segmentation_artifact = load_segmentation_artifact()
+segmentation_model = segmentation_artifact["model"]
+segmentation_scaler = segmentation_artifact["scaler"]
+segmentation_features = segmentation_artifact["features"]
+
 with st.sidebar:
     st.header("Filters")
 
@@ -146,11 +163,12 @@ if selected_job_role != "All job roles":
 st.title("Workforce360")
 st.caption("Understand workforce health, attrition risk, and what drives it.")
 
-overview_tab, risk_tab, people_tab, simulator_tab, model_tab = st.tabs(
+overview_tab, risk_tab, people_tab, segmentation_tab, simulator_tab, model_tab = st.tabs(
     [
         "Workforce overview",
         "Attrition risk",
         "People to review",
+        "Segmentation",
         "What-if simulator",
         "Model quality",
     ]
@@ -502,6 +520,138 @@ with model_tab:
             - SHAP values explain the model’s reasoning, not proven causes of attrition.
             - Review model performance, data quality, and fairness regularly before operational use.
             """
+        )
+
+with segmentation_tab:
+    st.subheader("Employee segments")
+
+    st.caption(
+        "Employees are grouped using KMeans clustering based on career, compensation, "
+        "engagement, and workload-related features."
+    )
+
+    segmentation_X, segmentation_features_used = prepare_segmentation_features(
+        df,
+        features=segmentation_features,
+    )
+
+    segmentation_model.scaler = segmentation_scaler
+
+    cluster_labels = assign_cluster(
+        model=segmentation_model,
+        df_new=segmentation_X,
+        features=segmentation_features_used,
+    )
+
+    segmented_df = filtered_df.copy()
+    segmented_df["cluster"] = cluster_labels[
+        filtered_df.index.isin(df.index)
+    ]
+
+    segmented_df = df.loc[filtered_df.index].copy()
+    segmented_df["cluster"] = cluster_labels[
+        df.index.isin(filtered_df.index)
+    ]
+
+    if segmented_df.empty:
+        st.warning("No employees match the selected filters.")
+    else:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### Segment sizes")
+
+            cluster_sizes = (
+                segmented_df["cluster"]
+                .value_counts()
+                .sort_index()
+                .rename_axis("Cluster")
+                .reset_index(name="Employees")
+            )
+
+            cluster_sizes["Cluster"] = cluster_sizes["Cluster"].astype(str)
+
+            st.bar_chart(
+                cluster_sizes.set_index("Cluster"),
+                use_container_width=True,
+            )
+
+        with col2:
+            st.markdown("#### Attrition by segment")
+
+            cluster_attrition = (
+                segmented_df.groupby("cluster")["attrition_flag"]
+                .mean()
+                .mul(100)
+                .round(1)
+                .sort_index()
+                .rename("Attrition rate (%)")
+            )
+
+            cluster_attrition.index = cluster_attrition.index.astype(str)
+
+            st.bar_chart(cluster_attrition, use_container_width=True)
+
+        st.divider()
+
+        st.markdown("#### Segment profiles")
+
+        profile_features = [
+            feature
+            for feature in segmentation_features_used
+            if feature in segmented_df.columns
+        ]
+
+        cluster_profile = (
+            segmented_df.groupby("cluster")[profile_features]
+            .mean()
+            .round(2)
+        )
+
+        cluster_profile.index = cluster_profile.index.astype(str)
+
+        st.dataframe(
+            cluster_profile,
+            use_container_width=True,
+        )
+
+        st.caption(
+            "Each row shows the average profile of employees in that segment."
+        )
+
+        st.divider()
+
+        st.markdown("#### Sample employees")
+
+        selected_cluster = st.selectbox(
+            "Select segment",
+            sorted(segmented_df["cluster"].unique().tolist()),
+            format_func=lambda cluster: f"Cluster {cluster}",
+        )
+
+        sample_columns = [
+            column
+            for column in [
+                "job_role",
+                "department",
+                "age",
+                "monthly_income",
+                "years_at_company",
+                "job_satisfaction",
+                "overtime_flag",
+                "attrition_flag",
+            ]
+            if column in segmented_df.columns
+        ]
+
+        sample_employees = segmented_df[
+            segmented_df["cluster"] == selected_cluster
+        ][sample_columns].head(10)
+
+        st.dataframe(
+            sample_employees,
+            use_container_width=True,
+            hide_index=True,
         )
 
 with simulator_tab:
