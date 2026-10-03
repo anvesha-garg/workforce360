@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+
 from typing import Any
+
 
 
 def build_workforce_context(
@@ -19,12 +21,17 @@ def build_workforce_context(
         label = key.replace("_", " ").title()
         forecast_lines.append(f"{label}: {value}")
 
-    context = "Current workforce metrics:\n"
+    context = "CURRENT WORKFORCE METRICS:\n"
     context += "\n".join(workforce_lines)
-    context += "\n\nWorkforce forecast:\n"
+    context += "\n\nWORKFORCE FORECAST SUMMARY:\n"
     context += "\n".join(forecast_lines)
+    context += "\n\nIMPORTANT LIMITATION:\n"
+    context += "Forecast outputs are synthetic planning demonstrations based on "
+    context += "available workforce history. They should be reviewed alongside "
+    context += "operational HR data before workforce decisions."
 
     return context
+
 
 
 def ask_llm(
@@ -66,15 +73,30 @@ def ask_llm(
     ):
         lines = []
         lines.append(f"**Current attrition rate:** {attrition}")
-        lines.append(f"The workforce has {employees} employees, including {active} active employees.")
+        lines.append(
+            f"The workforce has {employees} employees, including "
+            f"{active} active employees."
+        )
         lines.append("")
-        lines.append(f"**Forecast:** projected monthly attrition rate after 12 months is {projected_attrition}.")
+        lines.append(
+            f"**Forecast:** projected monthly attrition rate after 12 months "
+            f"is {projected_attrition}."
+        )
         lines.append("")
         lines.append("**Suggested HR actions:**")
-        lines.append(f"- Review overtime patterns; current overtime share is {overtime}.")
-        lines.append(f"- Review engagement; average job satisfaction is {satisfaction}.")
-        lines.append(f"- Review career progression; recent promotion rate is {promotions}.")
-        lines.append("- Prioritize manager check-ins and retention conversations for high-risk groups.")
+        lines.append(
+            f"- Review overtime patterns; current overtime share is {overtime}."
+        )
+        lines.append(
+            f"- Review engagement; average job satisfaction is {satisfaction}."
+        )
+        lines.append(
+            f"- Review career progression; recent promotion rate is {promotions}."
+        )
+        lines.append(
+            "- Prioritize manager check-ins and retention conversations for "
+            "high-risk groups."
+        )
 
         return "\n".join(lines)
 
@@ -92,15 +114,29 @@ def ask_llm(
     ):
         lines = []
         lines.append(f"**Current headcount:** {current_headcount}")
-        lines.append(f"**Projected headcount after 12 months:** {projected_headcount}")
+        lines.append(
+            f"**Projected headcount after 12 months:** {projected_headcount}"
+        )
         lines.append(f"**Projected net change:** {headcount_change}")
         lines.append("")
-        lines.append(f"The projected monthly attrition rate after 12 months is {projected_attrition}.")
+        lines.append(
+            f"The projected monthly attrition rate after 12 months is "
+            f"{projected_attrition}."
+        )
         lines.append("")
         lines.append("**Planning implication:**")
-        lines.append("- If the projected change is negative, review hiring plans, internal mobility, and retention actions.")
-        lines.append("- If it is positive, validate whether hiring can support workload and skill needs.")
-        lines.append("- Use the Forecast tab to inspect headcount, hires, exits, and attrition-rate trends.")
+        lines.append(
+            "- If the projected change is negative, review hiring plans, "
+            "internal mobility, and retention actions."
+        )
+        lines.append(
+            "- If it is positive, validate whether hiring can support workload "
+            "and skill needs."
+        )
+        lines.append(
+            "- Use the Forecast tab to inspect headcount, hires, exits, and "
+            "attrition-rate trends."
+        )
 
         return "\n".join(lines)
 
@@ -113,9 +149,16 @@ def ask_llm(
         lines.append(f"**Current workforce size:** {employees} employees")
         lines.append("")
         lines.append("**Compensation review suggestions:**")
-        lines.append("- Compare salary distributions by department, job role, and job level.")
-        lines.append("- Review internal equity alongside market benchmarks.")
-        lines.append("- Use the salary predictor as decision support, not as an automatic pay decision.")
+        lines.append(
+            "- Compare salary distributions by department, job role, and job level."
+        )
+        lines.append(
+            "- Review internal equity alongside market benchmarks."
+        )
+        lines.append(
+            "- Use the salary predictor as decision support, not as an automatic "
+            "pay decision."
+        )
 
         return "\n".join(lines)
 
@@ -132,10 +175,19 @@ def ask_llm(
         lines.append(f"- Average tenure: {tenure} years")
         lines.append("")
         lines.append("**Recommended focus areas:**")
-        lines.append("- Review employees with high model-estimated attrition probability.")
-        lines.append("- Investigate departments or roles with elevated attrition.")
-        lines.append("- Examine workload, engagement, promotion gaps, and compensation alignment.")
-        lines.append("- Use the People to review and What-if simulator tabs for follow-up.")
+        lines.append(
+            "- Review employees with high model-estimated attrition probability."
+        )
+        lines.append(
+            "- Investigate departments or roles with elevated attrition."
+        )
+        lines.append(
+            "- Examine workload, engagement, promotion gaps, and compensation "
+            "alignment."
+        )
+        lines.append(
+            "- Use the People to review and What-if simulator tabs for follow-up."
+        )
 
         return "\n".join(lines)
 
@@ -148,18 +200,33 @@ def ask_llm(
         lines.append(f"- Current headcount: {current_headcount}")
         lines.append(f"- Projected headcount: {projected_headcount}")
         lines.append(f"- Projected net change: {headcount_change}")
-        lines.append(f"- Projected monthly attrition rate: {projected_attrition}")
+        lines.append(
+            f"- Projected monthly attrition rate: {projected_attrition}"
+        )
         lines.append("")
         lines.append("**Interpretation:**")
-        lines.append("- A negative headcount change suggests potential retention or hiring pressure.")
-        lines.append("- A positive change suggests expected workforce growth.")
-        lines.append("- Review the Forecast tab before making hiring or budget decisions.")
+        lines.append(
+            "- A negative headcount change suggests potential retention or "
+            "hiring pressure."
+        )
+        lines.append(
+            "- A positive change suggests expected workforce growth."
+        )
+        lines.append(
+            "- Review the Forecast tab before making hiring or budget decisions."
+        )
 
         return "\n".join(lines)
 
     if any(
         word in question_lower
-        for word in ["satisfaction", "engagement", "overtime", "promotion", "tenure"]
+        for word in [
+            "satisfaction",
+            "engagement",
+            "overtime",
+            "promotion",
+            "tenure",
+        ]
     ):
         lines = []
         lines.append("**Current engagement and workload signals:**")
@@ -169,14 +236,24 @@ def ask_llm(
         lines.append(f"- Average tenure: {tenure} years")
         lines.append("")
         lines.append("**Suggested review:**")
-        lines.append("- Identify teams with high overtime and lower satisfaction.")
-        lines.append("- Review promotion and development opportunities for long-tenured employees.")
-        lines.append("- Use manager check-ins to understand engagement concerns.")
+        lines.append(
+            "- Identify teams with high overtime and lower satisfaction."
+        )
+        lines.append(
+            "- Review promotion and development opportunities for long-tenured "
+            "employees."
+        )
+        lines.append(
+            "- Use manager check-ins to understand engagement concerns."
+        )
 
         return "\n".join(lines)
 
     lines = []
-    lines.append("I can help with workforce health, attrition, headcount planning, compensation, engagement, and the 12-month forecast.")
+    lines.append(
+        "I can help with workforce health, attrition, headcount planning, "
+        "compensation, engagement, and the 12-month forecast."
+    )
     lines.append("")
     lines.append("**Current snapshot:**")
     lines.append(f"- Employees: {employees}")
@@ -187,8 +264,12 @@ def ask_llm(
     lines.append("")
     lines.append("**Try asking:**")
     lines.append("- What is the current overall attrition rate?")
-    lines.append("- How is the workforce expected to change over the next 12 months?")
-    lines.append("- What workforce metrics should HR review before planning hiring?")
+    lines.append(
+        "- How is the workforce expected to change over the next 12 months?"
+    )
+    lines.append(
+        "- What workforce metrics should HR review before planning hiring?"
+    )
     lines.append("- Summarize the main workforce risks.")
 
     return "\n".join(lines)
