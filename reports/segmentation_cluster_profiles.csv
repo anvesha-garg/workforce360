@@ -1,0 +1,5 @@
+cluster,age,monthly_income,years_at_company,total_working_years,years_since_promotion,job_satisfaction,overtime_flag,Attrition rate (%)
+0,49.59,13542.62,6.8,23.16,1.6,2.68,0.24,5.39
+1,33.98,4657.82,5.44,8.04,1.53,2.72,0.0,11.43
+2,34.91,4751.98,5.38,8.52,1.57,2.81,1.0,34.12
+3,44.61,13722.5,21.36,23.71,8.65,2.67,0.27,12.88
