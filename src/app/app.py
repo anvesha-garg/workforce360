@@ -2,10 +2,13 @@ import json
 import sys
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parents[2]
+
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
 
 import joblib
 import pandas as pd
@@ -20,6 +23,8 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+
+from src.ai_copilot.llm_client import ask_llm
 from src.analytics.insights import (
     compute_shap_values,
     get_top_factors_for_employee,
@@ -38,29 +43,35 @@ from src.modeling.segmentation import (
     prepare_segmentation_features,
 )
 
+
 st.set_page_config(
     page_title="Workforce360",
     page_icon=":bar_chart:",
     layout="wide",
 )
 
+
 st.markdown(
     """
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+
       html, body, [class*="css"] {
           font-family: 'Inter', sans-serif;
       }
 
+
       .block-container {
           padding-top: 1.5rem;
-          padding-bottom: 3rem;
+          padding-bottom: 6rem;
           max-width: 1300px;
       }
 
+
       #MainMenu {visibility: hidden;}
       footer {visibility: hidden;}
+
 
       h1 {
           font-size: 2.1rem !important;
@@ -69,17 +80,20 @@ st.markdown(
           color: #0F172A !important;
       }
 
+
       h2 {
           font-size: 1.3rem !important;
           font-weight: 700 !important;
           color: #134E4A !important;
       }
 
+
       h3 {
           font-size: 1.05rem !important;
           font-weight: 650 !important;
           color: #334155 !important;
       }
+
 
       .w360-hero {
           background: linear-gradient(120deg, #0F766E 0%, #0EA5E9 60%, #6366F1 100%);
@@ -90,16 +104,19 @@ st.markdown(
           box-shadow: 0 18px 40px rgba(15, 118, 110, 0.20);
       }
 
+
       .w360-hero h1 {
           color: white !important;
           margin-bottom: 0.3rem;
       }
+
 
       .w360-hero p {
           font-size: 1rem;
           opacity: 0.94;
           margin: 0;
       }
+
 
       .w360-pill {
           display: inline-block;
@@ -113,14 +130,6 @@ st.markdown(
           margin-right: 0.4rem;
       }
 
-      .w360-card {
-          background: white;
-          border: 1px solid #E2E8F0;
-          border-radius: 18px;
-          padding: 1.1rem 1.2rem;
-          height: 100%;
-          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-      }
 
       .w360-feature {
           background: white;
@@ -131,6 +140,7 @@ st.markdown(
           box-shadow: 0 6px 18px rgba(15,23,42,0.05);
       }
 
+
       .w360-feature h5 {
           margin: 0 0 0.3rem 0;
           font-size: 0.96rem;
@@ -138,12 +148,14 @@ st.markdown(
           color: #134E4A;
       }
 
+
       .w360-feature p {
           font-size: 0.85rem;
           color: #475569;
           margin: 0;
           line-height: 1.45;
       }
+
 
       div[data-testid="stMetric"] {
           background: white;
@@ -153,15 +165,18 @@ st.markdown(
           box-shadow: 0 6px 18px rgba(15,23,42,0.05);
       }
 
+
       div[data-testid="stMetricLabel"] p {
           color: #64748B !important;
           font-weight: 600 !important;
       }
 
+
       div[data-testid="stMetricValue"] {
           color: #0F172A !important;
           font-weight: 800 !important;
       }
+
 
       .stTabs [data-baseweb="tab-list"] {
           gap: 8px;
@@ -170,6 +185,7 @@ st.markdown(
           border-radius: 14px;
       }
 
+
       .stTabs [data-baseweb="tab"] {
           border-radius: 10px;
           padding: 0.55rem 1rem;
@@ -177,11 +193,13 @@ st.markdown(
           color: #475569;
       }
 
+
       .stTabs [aria-selected="true"] {
           background: white !important;
           color: #0F766E !important;
           box-shadow: 0 3px 10px rgba(15,118,110,0.12);
       }
+
 
       .stButton > button {
           background: linear-gradient(90deg, #0F766E, #0EA5E9);
@@ -192,18 +210,49 @@ st.markdown(
           padding: 0.55rem 1.2rem;
       }
 
+
       .stButton > button:hover {
           filter: brightness(1.06);
       }
+
 
       .stDownloadButton > button {
           border-radius: 12px;
           font-weight: 600;
       }
+
+
+      div[data-testid="stButton"] button[kind="primary"] {
+          position: fixed !important;
+          bottom: 28px !important;
+          right: 28px !important;
+          width: 64px !important;
+          height: 64px !important;
+          min-width: 64px !important;
+          border-radius: 50% !important;
+          background: linear-gradient(135deg, #0F766E, #0EA5E9) !important;
+          color: white !important;
+          font-size: 26px !important;
+          box-shadow: 0 12px 30px rgba(15, 118, 110, 0.35) !important;
+          z-index: 999999 !important;
+          padding: 0 !important;
+      }
+
+
+      div[data-testid="stButton"] button[kind="primary"]:hover {
+          transform: scale(1.06);
+          filter: brightness(1.08);
+      }
+
+
+      div[data-testid="stDialog"] {
+          border-radius: 22px !important;
+      }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
 
 
 @st.cache_data
@@ -212,9 +261,11 @@ def load_clean_data() -> pd.DataFrame:
     return clean_hr_data(raw_df)
 
 
+
 @st.cache_resource
 def load_model():
     return load_attrition_model()
+
 
 
 @st.cache_data
@@ -225,10 +276,12 @@ def load_evaluation_data():
     return X_train, X_test, y_train, y_test
 
 
+
 @st.cache_resource
 def load_salary_model():
     salary_model_path = ROOT / "models" / "salary_model.joblib"
     return joblib.load(salary_model_path)
+
 
 
 @st.cache_data
@@ -236,10 +289,12 @@ def load_salary_metrics():
     metrics_path = ROOT / "reports" / "salary_model_metrics.json"
 
     if metrics_path.exists():
-        with open(metrics_path, "r") as file:
+        with open(metrics_path, "r", encoding="utf-8") as file:
             return json.load(file)
 
     return {}
+
+
 
 @st.cache_data
 def load_forecast_artifacts():
@@ -263,6 +318,63 @@ def load_forecast_artifacts():
     metrics = pd.read_csv(metrics_path)
 
     return monthly, forecasts, metrics
+
+
+
+def build_copilot_context() -> tuple[dict, dict]:
+    """Create grounded workforce and forecast context for the AI copilot."""
+    kpis = workforce_kpi_summary(df)
+
+    workforce_summary = {
+        "total_employees": f"{kpis['total_employees']:,}",
+        "active_employees": f"{kpis['active_employees']:,}",
+        "attrition_rate_percent": f"{kpis['attrition_rate']:.1f}%",
+        "average_monthly_salary_usd": f"${kpis['average_monthly_salary']:,.0f}",
+        "average_tenure_years": f"{kpis['average_tenure_years']:.1f}",
+        "average_job_satisfaction": f"{kpis['average_job_satisfaction']:.1f}/4",
+        "recent_promotion_rate_percent": f"{kpis['recent_promotion_rate']:.1f}%",
+        "overtime_percentage": f"{kpis['overtime_percentage']:.1f}%",
+    }
+
+    if not monthly_workforce.empty and not forecast_results.empty:
+        current_headcount = int(monthly_workforce["headcount"].iloc[-1])
+
+        headcount_forecast = forecast_results[
+            forecast_results["target"] == "headcount"
+        ]
+
+        final_headcount = (
+            int(headcount_forecast["forecast"].iloc[-1])
+            if not headcount_forecast.empty
+            else current_headcount
+        )
+
+        attrition_forecast = forecast_results[
+            forecast_results["target"] == "attrition_rate"
+        ]
+
+        final_attrition_rate = (
+            float(attrition_forecast["forecast"].iloc[-1])
+            if not attrition_forecast.empty
+            else kpis["attrition_rate"] / 100
+        )
+
+        forecast_summary = {
+            "forecast_horizon_months": 12,
+            "current_headcount": f"{current_headcount:,}",
+            "projected_headcount_after_12_months": f"{final_headcount:,}",
+            "projected_headcount_change": f"{final_headcount - current_headcount:+,}",
+            "projected_monthly_attrition_rate_after_12_months": f"{final_attrition_rate:.2%}",
+        }
+    else:
+        forecast_summary = {
+            "forecast_horizon_months": "Forecast artifacts unavailable",
+        }
+
+    return workforce_summary, forecast_summary
+
+
+
 def get_risk_tier(probability: float) -> str:
     if probability >= 0.70:
         return "High"
@@ -271,11 +383,13 @@ def get_risk_tier(probability: float) -> str:
     return "Low"
 
 
+
 df = load_clean_data()
 model = load_model()
 X_train, X_test, y_train, y_test = load_evaluation_data()
 salary_model = load_salary_model()
 salary_metrics = load_salary_metrics()
+
 
 try:
     monthly_workforce, forecast_results, forecast_metrics = load_forecast_artifacts()
@@ -285,16 +399,20 @@ except FileNotFoundError as error:
     forecast_results = pd.DataFrame()
     forecast_metrics = pd.DataFrame()
     forecast_load_error = str(error)
-    
+
+
+
 @st.cache_resource
 def load_segmentation_artifact():
     return load_segmentation_model()
+
 
 
 segmentation_artifact = load_segmentation_artifact()
 segmentation_model = segmentation_artifact["model"]
 segmentation_scaler = segmentation_artifact["scaler"]
 segmentation_features = segmentation_artifact["features"]
+
 
 
 with st.sidebar:
@@ -317,13 +435,17 @@ with st.sidebar:
     )
 
 
+
 filtered_df = df.copy()
+
 
 if selected_department != "All departments":
     filtered_df = filtered_df[filtered_df["department"] == selected_department]
 
+
 if selected_job_role != "All job roles":
     filtered_df = filtered_df[filtered_df["job_role"] == selected_job_role]
+
 
 
 st.markdown(
@@ -342,9 +464,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
 st.markdown("### What you can do here")
 
+
 feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
+
 
 with feature_col1:
     st.markdown(
@@ -357,6 +482,7 @@ with feature_col1:
         unsafe_allow_html=True,
     )
 
+
 with feature_col2:
     st.markdown(
         """
@@ -367,6 +493,7 @@ with feature_col2:
         """,
         unsafe_allow_html=True,
     )
+
 
 with feature_col3:
     st.markdown(
@@ -379,6 +506,7 @@ with feature_col3:
         unsafe_allow_html=True,
     )
 
+
 with feature_col4:
     st.markdown(
         """
@@ -390,7 +518,9 @@ with feature_col4:
         unsafe_allow_html=True,
     )
 
+
 st.write("")
+
 
 overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast_tab, simulator_tab, model_tab = st.tabs(
     [
@@ -404,6 +534,7 @@ overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast
         "📈 Model quality",
     ]
 )
+
 
 
 with overview_tab:
@@ -494,6 +625,7 @@ with overview_tab:
             )
 
             st.plotly_chart(fig2, use_container_width=True)
+
 
 
 with risk_tab:
@@ -632,6 +764,7 @@ with risk_tab:
         st.pyplot(ax.figure)
 
 
+
 with people_tab:
     st.subheader("Employees to review")
 
@@ -690,6 +823,7 @@ with people_tab:
     st.caption(
         "This list highlights employees with the highest model-estimated attrition probability among the selected filters."
     )
+
 
 
 with segmentation_tab:
@@ -838,6 +972,7 @@ with segmentation_tab:
         ][sample_columns].head(10)
 
         st.dataframe(sample_employees, use_container_width=True, hide_index=True)
+
 
 
 with compensation_tab:
@@ -1136,6 +1271,8 @@ with compensation_tab:
         else:
             st.info("Salary model metrics file was not found.")
 
+
+
 with forecast_tab:
     st.subheader("Workforce Forecasting")
     st.caption(
@@ -1391,6 +1528,8 @@ with forecast_tab:
             "operational workforce predictions."
         )
 
+
+
 with simulator_tab:
     st.subheader("Explore a hypothetical employee")
 
@@ -1464,6 +1603,7 @@ with simulator_tab:
         )
 
 
+
 with model_tab:
     st.subheader("Model quality")
 
@@ -1517,3 +1657,81 @@ with model_tab:
             - Review model performance, data quality, and fairness regularly before operational use.
             """
         )
+
+
+
+@st.dialog("🤖 AI HR Copilot", width="large")
+def open_ai_copilot():
+    st.caption(
+        "Ask questions about workforce health, attrition, compensation, and "
+        "forecasting. Answers use current Workforce360 metrics and saved "
+        "forecast artifacts."
+    )
+
+    if "copilot_messages" not in st.session_state:
+        st.session_state.copilot_messages = []
+
+    for message in st.session_state.copilot_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    user_question = st.chat_input(
+        "Ask about workforce trends, attrition, compensation, or forecasting"
+    )
+
+    if user_question:
+        st.session_state.copilot_messages.append(
+            {"role": "user", "content": user_question}
+        )
+
+        with st.chat_message("user"):
+            st.markdown(user_question)
+
+        with st.chat_message("assistant"):
+            try:
+                with st.spinner("Analyzing workforce context..."):
+                    workforce_summary, forecast_summary = build_copilot_context()
+
+                    answer = ask_llm(
+                        question=user_question,
+                        workforce_summary=workforce_summary,
+                        forecast_summary=forecast_summary,
+                    )
+
+                st.markdown(answer)
+
+                st.session_state.copilot_messages.append(
+                    {"role": "assistant", "content": answer}
+                )
+
+            except KeyError:
+                st.error(
+                    "OpenAI API key is missing. Add it to "
+                    "`.streamlit/secrets.toml` under `[llm]` as `api_key`."
+                )
+
+            except Exception as error:
+                st.error(
+                    f"The AI Copilot could not complete this request: {error}"
+                )
+
+    with st.expander("Example questions"):
+        st.markdown(
+            """
+            - What is the current overall attrition rate?
+            - How is the workforce expected to change over the next 12 months?
+            - What workforce metrics should HR review before planning hiring?
+            - Summarize the main workforce risks shown by the current data.
+            - What does the forecast suggest about future retention pressure?
+            """
+        )
+
+    st.caption(
+        "The Copilot uses only the workforce context supplied by Workforce360. "
+        "It does not access individual employee records, execute database "
+        "queries, or make automated employment decisions."
+    )
+
+
+if st.button("💬", key="copilot_launcher", type="primary", help="Open AI HR Copilot"):
+    open_ai_copilot()
