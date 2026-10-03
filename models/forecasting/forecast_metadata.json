@@ -1,0 +1,23 @@
+{
+  "module": "2.5 Workforce Forecasting",
+  "source_data": "C:\\Users\\Anvesha Garg\\Desktop\\workforce360\\workforce360\\data\\processed\\employees_clean.csv",
+  "history_periods": 48,
+  "validation_periods": 6,
+  "forecast_horizon": 12,
+  "models_compared": [
+    "baseline",
+    "holt_winters"
+  ],
+  "targets": [
+    "headcount",
+    "hires",
+    "exits",
+    "attrition_rate"
+  ],
+  "artifacts": {
+    "monthly_workforce_metrics": "C:\\Users\\Anvesha Garg\\Desktop\\workforce360\\workforce360\\reports\\forecasting\\monthly_workforce_metrics.csv",
+    "forecast_results": "C:\\Users\\Anvesha Garg\\Desktop\\workforce360\\workforce360\\reports\\forecasting\\forecast_results.csv",
+    "forecast_metrics": "C:\\Users\\Anvesha Garg\\Desktop\\workforce360\\workforce360\\reports\\forecasting\\forecast_metrics.csv"
+  },
+  "data_limitation": "The source IBM HR dataset is a point-in-time snapshot without employment event dates. The monthly history is synthetic, deterministic, and intended solely for demonstration."
+}
