@@ -8,3 +8,11 @@ font = "sans serif"
 
 [server]
 headless = true
+
+[theme]
+base = "dark"
+primaryColor = "#22D3EE"
+backgroundColor = "#060E1C"
+secondaryBackgroundColor = "#0B1B33"
+textColor = "#F1F5F9"
+font = "sans serif"

@@ -23,6 +23,14 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+from ui_theme import (
+    W360_SCALE,
+    W360_WARM_SCALE,
+    inject_layout_css,
+    inject_theme,
+    layout_controls,
+    layout_tabs,
+)
 
 from src.ai_copilot.llm_client import ask_llm
 from src.analytics.insights import (
@@ -51,207 +59,7 @@ st.set_page_config(
 )
 
 
-st.markdown(
-    """
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-
-      html, body, [class*="css"] {
-          font-family: 'Inter', sans-serif;
-      }
-
-
-      .block-container {
-          padding-top: 1.5rem;
-          padding-bottom: 6rem;
-          max-width: 1300px;
-      }
-
-
-      #MainMenu {visibility: hidden;}
-      footer {visibility: hidden;}
-
-
-      h1 {
-          font-size: 2.1rem !important;
-          font-weight: 800 !important;
-          letter-spacing: -0.03em;
-          color: #0F172A !important;
-      }
-
-
-      h2 {
-          font-size: 1.3rem !important;
-          font-weight: 700 !important;
-          color: #134E4A !important;
-      }
-
-
-      h3 {
-          font-size: 1.05rem !important;
-          font-weight: 650 !important;
-          color: #334155 !important;
-      }
-
-
-      .w360-hero {
-          background: linear-gradient(120deg, #0F766E 0%, #0EA5E9 60%, #6366F1 100%);
-          border-radius: 22px;
-          padding: 2rem 2.2rem;
-          color: white;
-          margin-bottom: 1.7rem;
-          box-shadow: 0 18px 40px rgba(15, 118, 110, 0.20);
-      }
-
-
-      .w360-hero h1 {
-          color: white !important;
-          margin-bottom: 0.3rem;
-      }
-
-
-      .w360-hero p {
-          font-size: 1rem;
-          opacity: 0.94;
-          margin: 0;
-      }
-
-
-      .w360-pill {
-          display: inline-block;
-          background: rgba(255,255,255,0.17);
-          border: 1px solid rgba(255,255,255,0.28);
-          padding: 0.28rem 0.75rem;
-          border-radius: 999px;
-          font-size: 0.76rem;
-          font-weight: 600;
-          margin-top: 1rem;
-          margin-right: 0.4rem;
-      }
-
-
-      .w360-feature {
-          background: white;
-          border-left: 5px solid #0F766E;
-          border-radius: 14px;
-          padding: 1rem 1.1rem;
-          height: 100%;
-          box-shadow: 0 6px 18px rgba(15,23,42,0.05);
-      }
-
-
-      .w360-feature h5 {
-          margin: 0 0 0.3rem 0;
-          font-size: 0.96rem;
-          font-weight: 700;
-          color: #134E4A;
-      }
-
-
-      .w360-feature p {
-          font-size: 0.85rem;
-          color: #475569;
-          margin: 0;
-          line-height: 1.45;
-      }
-
-
-      div[data-testid="stMetric"] {
-          background: white;
-          border: 1px solid #E2E8F0;
-          border-radius: 16px;
-          padding: 1rem;
-          box-shadow: 0 6px 18px rgba(15,23,42,0.05);
-      }
-
-
-      div[data-testid="stMetricLabel"] p {
-          color: #64748B !important;
-          font-weight: 600 !important;
-      }
-
-
-      div[data-testid="stMetricValue"] {
-          color: #0F172A !important;
-          font-weight: 800 !important;
-      }
-
-
-      .stTabs [data-baseweb="tab-list"] {
-          gap: 8px;
-          background: #ECFDF5;
-          padding: 6px;
-          border-radius: 14px;
-      }
-
-
-      .stTabs [data-baseweb="tab"] {
-          border-radius: 10px;
-          padding: 0.55rem 1rem;
-          font-weight: 600;
-          color: #475569;
-      }
-
-
-      .stTabs [aria-selected="true"] {
-          background: white !important;
-          color: #0F766E !important;
-          box-shadow: 0 3px 10px rgba(15,118,110,0.12);
-      }
-
-
-      .stButton > button {
-          background: linear-gradient(90deg, #0F766E, #0EA5E9);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-weight: 700;
-          padding: 0.55rem 1.2rem;
-      }
-
-
-      .stButton > button:hover {
-          filter: brightness(1.06);
-      }
-
-
-      .stDownloadButton > button {
-          border-radius: 12px;
-          font-weight: 600;
-      }
-
-
-      div[data-testid="stButton"] button[kind="primary"] {
-          position: fixed !important;
-          bottom: 28px !important;
-          right: 28px !important;
-          width: 64px !important;
-          height: 64px !important;
-          min-width: 64px !important;
-          border-radius: 50% !important;
-          background: linear-gradient(135deg, #0F766E, #0EA5E9) !important;
-          color: white !important;
-          font-size: 26px !important;
-          box-shadow: 0 12px 30px rgba(15, 118, 110, 0.35) !important;
-          z-index: 999999 !important;
-          padding: 0 !important;
-      }
-
-
-      div[data-testid="stButton"] button[kind="primary"]:hover {
-          transform: scale(1.06);
-          filter: brightness(1.08);
-      }
-
-
-      div[data-testid="stDialog"] {
-          border-radius: 22px !important;
-      }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+inject_theme()
 
 
 
@@ -429,11 +237,17 @@ with st.sidebar:
     selected_job_role = st.selectbox("Job role", job_roles)
 
     st.divider()
+    nav_mode, panel_mode = layout_controls()
+
+    st.divider()
     st.caption(
         "Workforce360 supports HR decision-making with explainable analytics. "
         "Predictions are decision-support tools, not automated employment decisions."
     )
 
+
+
+inject_layout_css(nav_mode)
 
 
 filtered_df = df.copy()
@@ -522,7 +336,7 @@ with feature_col4:
 st.write("")
 
 
-overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast_tab, simulator_tab, model_tab = st.tabs(
+overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast_tab, simulator_tab, model_tab = layout_tabs(
     [
         "📊 Workforce overview",
         "🎯 Attrition risk",
@@ -532,7 +346,8 @@ overview_tab, risk_tab, people_tab, segmentation_tab, compensation_tab, forecast
         "🔮 Forecast",
         "🔍 What-if simulator",
         "📈 Model quality",
-    ]
+    ],
+    nav_mode,
 )
 
 
@@ -543,34 +358,30 @@ with overview_tab:
     else:
         kpis = workforce_kpi_summary(filtered_df)
 
-        col1, col2, col3, col4 = st.columns(4)
+        kpi_items = [
+            ("Employees", f"{kpis['total_employees']:,}"),
+            ("Attrition", f"{kpis['attrition_rate']:.1f}%"),
+            ("Avg. salary", f"${kpis['average_monthly_salary']:,.0f}"),
+            ("Avg. tenure", f"{kpis['average_tenure_years']:.1f} yrs"),
+            ("Active", f"{kpis['active_employees']:,}"),
+            ("Job satisfaction", f"{kpis['average_job_satisfaction']:.1f}/4"),
+            ("Recent promotions", f"{kpis['recent_promotion_rate']:.1f}%"),
+            ("Overtime", f"{kpis['overtime_percentage']:.1f}%"),
+        ]
 
-        col1.metric("Employees", f"{kpis['total_employees']:,}")
-        col2.metric("Attrition", f"{kpis['attrition_rate']:.1f}%")
-        col3.metric("Avg. salary", f"${kpis['average_monthly_salary']:,.0f}")
-        col4.metric("Avg. tenure", f"{kpis['average_tenure_years']:.1f} yrs")
+        def render_kpis(per_row):
+            for start in range(0, len(kpi_items), per_row):
+                row_items = kpi_items[start:start + per_row]
+                for column, (label, value) in zip(st.columns(per_row), row_items):
+                    column.metric(label, value)
 
-        col5, col6, col7, col8 = st.columns(4)
-
-        col5.metric("Active", f"{kpis['active_employees']:,}")
-        col6.metric("Job satisfaction", f"{kpis['average_job_satisfaction']:.1f}/4")
-        col7.metric("Recent promotions", f"{kpis['recent_promotion_rate']:.1f}%")
-        col8.metric("Overtime", f"{kpis['overtime_percentage']:.1f}%")
-
-        st.divider()
-
-        left_col, right_col = st.columns(2)
-
-        with left_col:
-            st.subheader("Employees who left vs. stayed")
-
+        def build_overview_figures(height):
             attrition_counts = (
                 filtered_df["attrition_flag"]
                 .value_counts()
                 .rename_axis("Status")
                 .reset_index(name="Employees")
             )
-
             attrition_counts["Status"] = attrition_counts["Status"].map(
                 {0: "Stayed", 1: "Left"}
             )
@@ -580,22 +391,9 @@ with overview_tab:
                 x="Status",
                 y="Employees",
                 color="Status",
-                color_discrete_map={"Stayed": "#0EA5E9", "Left": "#F43F5E"},
+                color_discrete_map={"Stayed": "#22D3EE", "Left": "#F43F5E"},
                 text="Employees",
             )
-
-            fig.update_layout(
-                showlegend=False,
-                height=380,
-                margin=dict(l=10, r=10, t=30, b=10),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-        with right_col:
-            st.subheader("Attrition by department")
 
             department_attrition = (
                 filtered_df.groupby("department")["attrition_flag"]
@@ -612,19 +410,56 @@ with overview_tab:
                 x="department",
                 y="Attrition rate (%)",
                 color="Attrition rate (%)",
-                color_continuous_scale=["#CCFBF1", "#0F766E", "#134E4A"],
+                color_continuous_scale=W360_SCALE,
                 text_auto=True,
             )
 
-            fig2.update_layout(
-                showlegend=False,
-                height=380,
-                margin=dict(l=10, r=10, t=30, b=10),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-            )
+            for figure in (fig, fig2):
+                figure.update_layout(
+                    showlegend=False,
+                    height=height,
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                )
 
-            st.plotly_chart(fig2, use_container_width=True)
+            return fig, fig2
+
+        def render_charts(side_by_side, height):
+            fig, fig2 = build_overview_figures(height)
+
+            if side_by_side:
+                left_col, right_col = st.columns(2)
+                with left_col:
+                    st.subheader("Employees who left vs. stayed")
+                    st.plotly_chart(fig, use_container_width=True)
+                with right_col:
+                    st.subheader("Attrition by department")
+                    st.plotly_chart(fig2, use_container_width=True)
+            else:
+                st.subheader("Employees who left vs. stayed")
+                st.plotly_chart(fig, use_container_width=True)
+                st.subheader("Attrition by department")
+                st.plotly_chart(fig2, use_container_width=True)
+
+        if panel_mode == "Metrics left":
+            metrics_col, charts_col = st.columns([1, 3])
+
+            with metrics_col:
+                render_kpis(1)
+
+            with charts_col:
+                render_charts(side_by_side=False, height=300)
+
+        elif panel_mode == "Charts first":
+            render_charts(side_by_side=True, height=400)
+            st.divider()
+            render_kpis(4)
+
+        else:  # "Metrics on top"
+            render_kpis(4)
+            st.divider()
+            render_charts(side_by_side=True, height=380)
 
 
 
@@ -872,7 +707,7 @@ with segmentation_tab:
                 x="Cluster",
                 y="Employees",
                 color="Employees",
-                color_continuous_scale=["#99F6E4", "#0F766E", "#134E4A"],
+                color_continuous_scale=W360_SCALE,
                 text_auto=True,
             )
 
@@ -906,7 +741,7 @@ with segmentation_tab:
                 x="cluster",
                 y="Attrition rate (%)",
                 color="Attrition rate (%)",
-                color_continuous_scale=["#FDE68A", "#F59E0B", "#B45309"],
+                color_continuous_scale=W360_WARM_SCALE,
                 text_auto=True,
             )
 
@@ -1007,7 +842,7 @@ with compensation_tab:
                 filtered_df,
                 x=salary_col,
                 nbins=40,
-                color_discrete_sequence=["#0F766E"],
+                color_discrete_sequence=["#22D3EE"],
                 labels={salary_col: "Monthly Salary"},
             )
 
@@ -1038,7 +873,7 @@ with compensation_tab:
                 y="department",
                 orientation="h",
                 color=salary_col,
-                color_continuous_scale=["#CCFBF1", "#0F766E", "#134E4A"],
+                color_continuous_scale=W360_SCALE,
                 labels={salary_col: "Average Monthly Salary", "department": "Department"},
             )
 
@@ -1085,7 +920,7 @@ with compensation_tab:
                     x=equity_col,
                     y="mean",
                     color="mean",
-                    color_continuous_scale=["#FDE68A", "#F59E0B", "#0F766E"],
+                    color_continuous_scale=W360_WARM_SCALE,
                     labels={
                         equity_col: equity_col.replace("_", " ").title(),
                         "mean": "Average Monthly Salary",
@@ -1126,7 +961,7 @@ with compensation_tab:
 
         model_features = getattr(salary_model, "feature_names_in_", None)
 
-        if not model_features:
+        if model_features is None or len(model_features) == 0:
             st.warning(
                 "The salary model does not expose feature names, so a prediction form cannot be generated safely."
             )
@@ -1370,7 +1205,7 @@ with forecast_tab:
             color="series_type",
             markers=True,
             color_discrete_map={
-                "Historical": "#0F766E",
+                "Historical": "#22D3EE",
                 "Forecast": "#F59E0B",
             },
             labels={
